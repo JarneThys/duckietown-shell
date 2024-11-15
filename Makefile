@@ -55,6 +55,6 @@ pre-circle-tests:
 
 post-circle-tests:
 	git --help
-	dts --set-version daffy
+	dts --set-version ente
 	dts help
 	dts version

@@ -78,7 +78,7 @@ KNOWN_DISTRIBUTIONS: Dict[str, Distro] = {
     "ente": Distro(
         "ente",
         "ente",
-        stable=False,
+        stable=True,
         tokens_supported=["dt2"],
         token_preferred="dt2"
     ),

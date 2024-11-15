@@ -23,7 +23,7 @@ if sys.version_info < (3, 6):
     msg = 'duckietown-shell works with Python 3.6 and later.\nDetected %s.' % str(sys.version)
     sys.exit(msg)
 
-distro = 'daffy'
+distro = 'ente'
 
 shell_version = get_version(filename='lib/dt_shell/__init__.py')
 
