@@ -1,4 +1,5 @@
 import logging
+import yaml
 import os
 import sys
 from typing import Optional, Dict, List
@@ -6,6 +7,8 @@ from typing import Optional, Dict, List
 # NOTE: DO NOT IMPORT DT_SHELL HERE
 
 from . import logger
+with open(f"{os.path.dirname(__file__)}/command_descriptions.yaml") as stream:
+    command_descriptions = yaml.safe_load(stream)
 
 
 # noinspection PyPep8Naming
@@ -37,7 +40,7 @@ def dts():
 
     # import dt_shell
     import dt_shell
-    from dt_shell.constants import DTShellConstants
+    from dt_shell.constants import DTShellConstants, EMBEDDED_COMMAND_SET_NAME
     from dt_shell.logging import setup_logging_color, dts_print
     from dt_shell.checks.environment import abort_if_running_with_sudo
     from dt_shell.shell import get_cli_options
@@ -128,10 +131,23 @@ def dts():
                 if shell.performed_migrations or shell.configured_shell or shell.configured_profile:
                     exit(0)
                 # no input
-                # TODO: maybe suggest possible commands?
                 dts_print("Use the syntax\n\n"
                           "\t\tdts [options] command [subcommand1 [subcommand2] ...] [arguments]\n",
                           color="red")
+                print("\nCore commands:")
+                keys = shell.command_set(EMBEDDED_COMMAND_SET_NAME).commands.keys()
+                length = len(max(keys, key=len)) + 2
+                for cmd in keys:
+                    print("\t%-*s%s" % (length, cmd, command_descriptions[cmd]["description"]))
+                # show commands grouped by command sets
+                for cs in shell.command_sets:
+                    if cs.name == EMBEDDED_COMMAND_SET_NAME:
+                        continue
+                    print(f"\nCommand set '{cs.name}':")
+                    keys = cs.commands.keys()
+                    length = len(max(keys, key=len)) + 2
+                    for cmd in keys:
+                        print("\t%-*s%s" % (length, cmd, command_descriptions[cmd]["description"]))
                 exit(1)
             else:
                 # input was given but it was not recognized
@@ -142,7 +158,16 @@ def dts():
             word: Optional[str] = e.remaining[0] if e.remaining else None
             subcommands: Dict[str] = e.last_matched.commands
             if len(subcommands) > 0:
-                subcommands_list: str = "\n\t\t".join(subcommands.keys())
+                command_description_set = command_descriptions
+                for argument in arguments:
+                    if argument in command_description_set:
+                        command_description_set = command_description_set[argument]["subcommands"]
+                subcommand_strings = []
+                keys = subcommands.keys()
+                length = len(max(keys, key=len)) + 2
+                for subcommand in keys:
+                    subcommand_strings.append("\t%-*s%s" % (length, subcommand, command_description_set[subcommand]["description"]))
+                subcommands_list: str = "\n\t\t".join(subcommand_strings)
                 # the partially matched command has subcommands
                 if word:
                     dts_print(
